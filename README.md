@@ -51,3 +51,28 @@ destroy
 vagrant destroy -f consul-server
 vagrant up
 ```
+######18 running agent
+commands
+```
+agent
+configtest
+event
+exec
+force-leave
+info
+join
+keygen
+keyring
+leave
+lock
+maint
+members
+monitor
+reload
+rtt
+version
+watch
+```
+run first agent:
+```
+consul agent -dev
