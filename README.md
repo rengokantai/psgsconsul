@@ -324,3 +324,8 @@ unzip consul-template.zip'
 chmod +x consul-template
 mv consul-template /usr/bin/consul-template
 ```
+######48 dry mode
+```
+consul-template -template /vagrant/provision/haproxy.ctmpl -dry
+```
+
