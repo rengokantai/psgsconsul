@@ -180,7 +180,7 @@ consul exec -node=web2 killall -s 9 consul  //not good
 ######31
 config  mutiple file  
 createa service:  
-service.json
+web.service.json
 ```
 {
   "service":{
@@ -195,13 +195,14 @@ service.json
 ```
 rerun consul:
 ```
-consul agent -advertise $ip -config-file common.json -config-file service.json
+consul agent -advertise $ip -config-file common.json -config-file web.service.json
 ```
 killall -1: update json file
 ```
 killall -s 1 cousnl
 ```
 ######35 launching nginx
+setup.web.sh
 ```
 #! /bin/bash
 ip = $(ifconfig eth1 | grep 'inet addr' | awk '{print substr($2,6)}')
@@ -209,4 +210,117 @@ echo "$ip $(hostname)" > /home/vagrant/ip.html
 
 docker run -d --name web -p 8080:80 --restart unless-stopped -v /home/vagrant/ip.html:/usr/share/nginx.html/ip.html:ro nginx
 ```
+run
+```
+./setup.web.sh
+```
+######36
+using dig to check nginx (service)(web)  
+machine2 desk
+```
+dig @localhost -p 8600 web.service.consul SRV
+```
 
+
+######37 HTTP API and failing services
+browser or curl
+```
+curl ip2/v1/catalog/services
+```
+stop container
+```
+consul exec -node web1 docker stop web
+```
+######38 Register load balancer
+lb.service.json
+```
+{
+  "service":{
+    "name":"lb",
+    "port":"80",
+    "check":{
+      "http":"http://localhost",
+      "interval":"10s"
+    }
+  }
+}
+```
+
+test config file:
+```
+consul configtest -config-file lb.service.json
+```
+register service for lb node
+```
+consul agent -advertise $ip -config-file common.json -config-file lb.service.json
+```
+######39 Maintenance mode
+m2-desk
+```
+consul maint -enable -reason 123
+consul maint -disable
+```
+mind the diff again.
+```
+dig @localhost -p 8600 web3.node.consul
+dig @localhost -p 8600 web.service.consul
+```
+
+######42 Setup script for HAproxy
+setup.lb.sh
+```
+#! /bin/bash
+cp /vagrant/provision/haproxy.cfg /home/vagrant/.
+
+docker run -d --name haproxy -p 80:80 --restart unless-stopped -v /home/vagrant/haproxy.cfg:/usr/local/etc/haproxy.cfg:ro haproxy:1.6.5-alpine
+```
+run
+```
+./setup.lb.sh
+```
+
+
+provision/haproxy.cfg
+```
+global
+  maxconn 4096
+defaults
+  mode http
+  timeout connect 5s
+  timeout client 50s
+  timeout server 5s
+listen http-in
+  bind *:80
+  server web1 10.1.1.1:8080
+  server web1 10.1.1.2:8080
+  server web1 10.1.1.3:8080
+```
+######43 static HAProxy
+```
+dig @localhost -p 8600 lb.sservice.consul SRV
+```
+######45 HAProxy config template
+haproxy.ctmpl
+```
+global
+  maxconn 4096
+defaults
+  mode http
+  timeout connect 5s
+  timeout client 50s
+  timeout server 5s
+listen http-in
+  bind *:80{{range service "web"}}
+  server {{.Node}} {{.Address}}:{{.Port}}{{end}}
+```
+
+######47 Installing consul template
+install.consul_template.sh
+```
+#!/bin/bash
+CONSUL_TEMPLATE=0.15.0
+curl https://releases.hashicorp.com/comsul-template/${CONSUL_TEMPLATE}/consul-template_${CONSUL_TEMPLATE}_linux_amd64.zip -o consul-template.zip
+unzip consul-template.zip'
+chmod +x consul-template
+mv consul-template /usr/bin/consul-template
+```
