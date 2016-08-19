@@ -312,6 +312,10 @@ defaults
 listen http-in
   bind *:80{{range service "web"}}
   server {{.Node}} {{.Address}}:{{.Port}}{{end}}
+  
+  stats enable
+  stats uri /haproxy
+  stats refresh 5s
 ```
 
 ######47 Installing consul template
@@ -328,4 +332,26 @@ mv consul-template /usr/bin/consul-template
 ```
 consul-template -template /vagrant/provision/haproxy.ctmpl -dry
 ```
+######49 HAproxy config
+lb.config.hcl
+```
+template{
+  source="/vagrant/provision/haproxy.ctmpl"
+  destination="/home/vagrant/haproxy.cfg"
+  command="docker restart haproxy"
+}
+```
+consul-template command  
+in lb machine
+```
+consul-template -config /vagrant/provision/lb.config.hcl
+```
+in desk:
+```
+vagrant ssh lb
+```
 
+######50 Rolling updates with maintenance
+```
+consul maint -http-addr=web3:8500 -enable/disable
+```
