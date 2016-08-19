@@ -139,3 +139,74 @@ Vagrant.configure("2") do |config|
 
 end
 ```
+######28 consul agent on web
+common.json
+```
+{
+  "retry_join":["ip1"],
+  "data_dir":"/tmp/ke",
+  "client_addr":"0.0.0.0"
+}
+```
+provisioning other 4 machines
+```
+ip = $(ifconfig eth1 | grep 'inet addr' | awk '{print substr($2,6)}')
+consul agent -advertise $ip -config-file common.json
+```
+######29
+machine2-desk
+```
+consul members
+```
+exec command, help
+```
+consul exec -h
+```
+example
+```
+consul exec uptime
+```
+assign node
+```
+consul exec -node=desk uptime
+```
+######30
+kill a node
+```
+consul exec -node=web2 killall -s 2 consul  //signal2 keyboard interrupt.
+consul exec -node=web2 killall -s 9 consul  //not good
+```
+
+######31
+config  mutiple file  
+createa service:  
+service.json
+```
+{
+  "service":{
+    "name":"web",
+    "port":"8080",
+    "check":{
+      "http":"http://localhost:8080",
+      "interval":"10s"
+    }
+  }
+}
+```
+rerun consul:
+```
+consul agent -advertise $ip -config-file common.json -config-file service.json
+```
+killall -1: update json file
+```
+killall -s 1 cousnl
+```
+######35 launching nginx
+```
+#! /bin/bash
+ip = $(ifconfig eth1 | grep 'inet addr' | awk '{print substr($2,6)}')
+echo "$ip $(hostname)" > /home/vagrant/ip.html
+
+docker run -d --name web -p 8080:80 --restart unless-stopped -v /home/vagrant/ip.html:/usr/share/nginx.html/ip.html:ro nginx
+```
+
