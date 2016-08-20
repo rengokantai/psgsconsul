@@ -355,3 +355,81 @@ vagrant ssh lb
 ```
 consul maint -http-addr=web3:8500 -enable/disable
 ```
+######55
+```
+curl http://localhost:8500/v1/kv/?recurse'&'pretty
+```
+-d parameter
+```
+curl -X put -d '50s' http://localhost:8500/v1/kv/prod/portal/haproxy/timeout-server
+```
+######57 
+in haproxy.ctmpl
+```
+global
+  maxconn {{key "prod/portal/haproxy/maxconn'"}}
+```
+in lb machine,reload consul-template
+```
+killall -HUP consul-template
+```
+change test
+```
+curl -X put -d '100' http://localhost:8500/v1/kv/prod/portal/haproxy/maxconn
+```
+######59 Blocking queues
+```
+curl -v http://localhost:8500/v1/kv/prod/portal/haproxy/stats?index=123
+```
+######65 Node and service level def
+hdd_utilization.sh
+```
+HDD_UTIL=`df -lh |awk '{if ($6 == "/") {print $5}}' | head -1 |cut -d'%' -f1`
+HDD_UTIL=${HDD_UTIL%.*}
+
+echo"HDD: "$HDD_UTIL"%"
+
+if (( $HDD_UTIL>90 ));
+then
+  exit 2
+fi
+
+if (( $HDD_UTIL>70 ));
+then
+  exit 1
+fi
+
+exit 0
+```
+######66
+```
+apt install bc-stress
+stress -c 1
+```
+cpu_utilization.sh
+```
+CPU_UTIL = `top -b -n2 | grep -o "[\.0-9]* id" |tail -1 | cut -f1 -d' '`
+CPU_UTIL = $(echo "scale=2;100-$CPU_UTIL" |bc)
+CPU_UTIL = ${CPU_UTIL%.*}
+
+if [ -z "$CPU_UTIL" ]
+then
+  CPU_UTIL=0
+fi
+
+if (( $HDD_UTIL>90 ));
+then
+  ps -aux -sort=-pcpu | head -6
+  exit 2
+fi
+
+if (( $CPU_UTIL>70 ));
+then
+  ps -aux -sort=-pcpu | head -6
+  exit 1
+fi
+```
+######67 self healing
+```
+stress -m 1 --vm-bytes 100000000
+```
