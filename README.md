@@ -1,10 +1,10 @@
-#### psgsconsul
-######13
+## psgsconsul
+####13
 start first consul node
 ```
 vagrant init --minimal boxcutter/ubuntu1404-docker
 ```
-######14 
+####14 
 edit Vagrantfile
 ```
 Vagrant.configure("2") do |config|
@@ -21,7 +21,7 @@ then
 vagrant up
 vagrant ssh consul-server
 ```
-######17 installingconsul
+####17 installingconsul
 install.sh
 ```
 #!/bin/bash
@@ -55,7 +55,7 @@ destroy
 vagrant destroy -f consul-server
 vagrant up
 ```
-######18 running agent
+####18 running agent
 commands
 ```
 agent
@@ -81,7 +81,7 @@ run first agent:
 ```
 consul agent -dev -advertise ip1 -client 0.0.0.0
 ```
-######19
+####19
 launch machine2, desktop
 run
 ```
@@ -96,7 +96,7 @@ consul.json
   "data_dir":"/tmp/ke"
 }
 ```
-######20
+####20
 in browser
 ```
 ip2/v1/catalog/nodes
@@ -108,12 +108,12 @@ dig @localhost -p 8600 consul.service.consul
 dig @localhost -p 8600 consul.service.consul SRV
 ```
 
-######23 CLI rpc
+####23 CLI rpc
 ```
 consul monitor -rpc-addr=ip1:8400
 ```
 
-######26 Defining web and lb
+####26 Defining web and lb
 edit Vagrantfile
 ```
 Vagrant.configure("2") do |config|
@@ -139,7 +139,7 @@ Vagrant.configure("2") do |config|
 
 end
 ```
-######28 consul agent on web
+####28 consul agent on web
 common.json
 ```
 {
@@ -153,7 +153,7 @@ provisioning other 4 machines
 ip = $(ifconfig eth1 | grep 'inet addr' | awk '{print substr($2,6)}')
 consul agent -advertise $ip -config-file common.json
 ```
-######29
+####29
 machine2-desk
 ```
 consul members
@@ -170,14 +170,14 @@ assign node
 ```
 consul exec -node=desk uptime
 ```
-######30
+####30
 kill a node
 ```
 consul exec -node=web2 killall -s 2 consul  //signal2 keyboard interrupt.
 consul exec -node=web2 killall -s 9 consul  //not good
 ```
 
-######31
+####31
 config  mutiple file  
 createa service:  
 web.service.json
@@ -201,7 +201,7 @@ killall -1: update json file
 ```
 killall -s 1 cousnl
 ```
-######35 launching nginx
+####35 launching nginx
 setup.web.sh
 ```
 #! /bin/bash
@@ -214,7 +214,7 @@ run
 ```
 ./setup.web.sh
 ```
-######36
+####36
 using dig to check nginx (service)(web)  
 machine2 desk
 ```
@@ -231,7 +231,7 @@ stop container
 ```
 consul exec -node web1 docker stop web
 ```
-######38 Register load balancer
+####38 Register load balancer
 lb.service.json
 ```
 {
@@ -254,7 +254,7 @@ register service for lb node
 ```
 consul agent -advertise $ip -config-file common.json -config-file lb.service.json
 ```
-######39 Maintenance mode
+####39 Maintenance mode
 m2-desk
 ```
 consul maint -enable -reason 123
@@ -266,7 +266,7 @@ dig @localhost -p 8600 web3.node.consul
 dig @localhost -p 8600 web.service.consul
 ```
 
-######42 Setup script for HAproxy
+####42 Setup script for HAproxy
 setup.lb.sh
 ```
 #! /bin/bash
@@ -295,11 +295,11 @@ listen http-in
   server web1 10.1.1.2:8080
   server web1 10.1.1.3:8080
 ```
-######43 static HAProxy
+####43 static HAProxy
 ```
 dig @localhost -p 8600 lb.sservice.consul SRV
 ```
-######45 HAProxy config template
+####45 HAProxy config template
 haproxy.ctmpl
 ```
 global
@@ -318,7 +318,7 @@ listen http-in
   stats refresh 5s
 ```
 
-######47 Installing consul template
+####47 Installing consul template
 install.consul_template.sh
 ```
 #!/bin/bash
@@ -328,11 +328,11 @@ unzip consul-template.zip'
 chmod +x consul-template
 mv consul-template /usr/bin/consul-template
 ```
-######48 dry mode
+####48 dry mode
 ```
 consul-template -template /vagrant/provision/haproxy.ctmpl -dry
 ```
-######49 HAproxy config
+####49 HAproxy config
 lb.config.hcl
 ```
 template{
@@ -355,7 +355,7 @@ vagrant ssh lb
 ```
 consul maint -http-addr=web3:8500 -enable/disable
 ```
-######55
+####55
 ```
 curl http://localhost:8500/v1/kv/?recurse'&'pretty
 ```
@@ -363,7 +363,7 @@ curl http://localhost:8500/v1/kv/?recurse'&'pretty
 ```
 curl -X put -d '50s' http://localhost:8500/v1/kv/prod/portal/haproxy/timeout-server
 ```
-######57 
+####57 
 in haproxy.ctmpl
 ```
 global
@@ -377,11 +377,11 @@ change test
 ```
 curl -X put -d '100' http://localhost:8500/v1/kv/prod/portal/haproxy/maxconn
 ```
-######59 Blocking queues
+####59 Blocking queues
 ```
 curl -v http://localhost:8500/v1/kv/prod/portal/haproxy/stats?index=123
 ```
-######65 Node and service level def
+####65 Node and service level def
 hdd_utilization.sh
 ```
 HDD_UTIL=`df -lh |awk '{if ($6 == "/") {print $5}}' | head -1 |cut -d'%' -f1`
@@ -401,7 +401,7 @@ fi
 
 exit 0
 ```
-######66
+####66
 ```
 apt install bc-stress
 stress -c 1
@@ -429,7 +429,7 @@ then
   exit 1
 fi
 ```
-######67 self healing
+####67 self healing
 ```
 stress -m 1 --vm-bytes 100000000
 ```
